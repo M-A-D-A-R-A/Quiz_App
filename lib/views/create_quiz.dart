@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiz_app/services/database.dart';
 import 'package:quiz_app/views/addquestion.dart';
+import 'package:quiz_app/views/results.dart';
 import 'package:quiz_app/widgets/widgets.dart';
 import 'package:random_string/random_string.dart';
 
@@ -10,8 +11,18 @@ class CreateQuiz extends StatefulWidget {
 }
 
 class _CreateQuizState extends State<CreateQuiz> {
+
+  //Results results = new Results(correct: , incorect: incorect, total: total)
+
+  TotalNo(totalNo){
+
+
+
+  }
+
+
   final _formKey = GlobalKey<FormState>();
-  String quizImageUrl, quizTitle, quizDescription, quizId;
+  String quizImageUrl, quizTitle, quizDescription, quizId,totalNo;
   DatabaseService databaseService = new DatabaseService();
   bool _isLoading = false;
   createQuizOnline() async {
@@ -24,7 +35,8 @@ class _CreateQuizState extends State<CreateQuiz> {
         "quizId": quizId,
         "quizImUrl": quizImageUrl,
         "quizTitle": quizTitle,
-        "quizDesc": quizDescription
+        "quizDesc": quizDescription,
+        "totalNO": TotalNo(totalNo)
       };
       databaseService.addQuizData(quizMap, quizId).then((value) {
         setState(() {

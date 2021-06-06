@@ -1,30 +1,80 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:quiz_app/models/question_model.dart';
+import 'package:quiz_app/models/sheet_form.dart';
 import 'package:quiz_app/services/database.dart';
+import 'package:quiz_app/services/sheet_controller.dart';
 import 'package:quiz_app/views/results.dart';
 import 'package:quiz_app/widgets/quiz_play_widgets.dart';
 import 'package:quiz_app/widgets/widgets.dart';
 
 class QuizPlay extends StatefulWidget {
   final String quizId;
-  QuizPlay(this.quizId);
+  QuizPlay(
+    this.quizId,
+  );
 
   @override
   _QuizPlayState createState() => _QuizPlayState();
 }
 
+TextEditingController nameController = TextEditingController();
+TextEditingController emailController = TextEditingController();
+TextEditingController totalMarks = TextEditingController();
+final _formKey = GlobalKey<FormState>();
+
+
 int _correct = 0;
 int _incorrect = 0;
 int _notAttempted = 0;
-int total = 0;
+var total = 0;
+// int prevNo = 0;
 
 /// Stream
 Stream infoStream;
 
+// class getPrevNO extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Text(
+//       "Your Previos No is $_correct/$total",
+//       style: TextStyle(
+//           color: Colors.white, fontSize: 14, fontWeight: FontWeight.w400),
+//     );
+//   }
+// }
+
 class _QuizPlayState extends State<QuizPlay> {
   QuerySnapshot questionSnaphot;
   DatabaseService databaseService = new DatabaseService();
+
+  void _submitForm() {
+    if (_formKey.currentState.validate()) {
+      FeedbackForm feedbackForm = FeedbackForm(
+        nameController.text,
+        emailController.text,
+        totalMarks.text,
+      );
+
+      FormController formController = FormController((String response) {
+        print("Response: $response");
+        if (response == FormController.STATUS_SUCCESS) {
+          print("Feedback Submitted");
+          //
+          // _showSnackbar("Feedback Submitted");
+        } else {
+          print("Error Occurred!");
+          // _showSnackbar("Error Occurred!");
+        }
+      });
+
+      // _showSnackbar("Submitting Feedback");
+
+      // Submit 'feedbackForm' and save it in Google Sheet
+
+      formController.submitForm(feedbackForm);
+    }
+  }
 
   bool isLoading = true;
 
@@ -38,12 +88,12 @@ class _QuizPlayState extends State<QuizPlay> {
       isLoading = false;
       total = questionSnaphot.documents.length;
       setState(() {});
-      print("init don $total ${widget.quizId} ");
+     // print("init don $total ${widget.quizId} ");
     });
 
     if (infoStream == null) {
       infoStream = Stream<List<int>>.periodic(Duration(milliseconds: 100), (x) {
-        print("this is x $x");
+        //print("this is x $x");
         return [_correct, _incorrect];
       });
     }
@@ -165,22 +215,24 @@ class _InfoHeaderState extends State<InfoHeader> {
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     shrinkWrap: true,
-                    children: <Widget>[NoOfQuestionTile(
-                text: "Total",
-                number: widget.length,
-              ),
-              NoOfQuestionTile(
-                text: "Correct",
-                number: _correct,
-              ),
-              NoOfQuestionTile(
-                text: "Incorrect",
-                number: _incorrect,
-              ),
-              NoOfQuestionTile(
-                text: "NotAttempted",
-                number: _notAttempted,
-              ),],
+                    children: <Widget>[
+                      NoOfQuestionTile(
+                        text: "Total",
+                        number: widget.length,
+                      ),
+                      NoOfQuestionTile(
+                        text: "Correct",
+                        number: _correct,
+                      ),
+                      NoOfQuestionTile(
+                        text: "Incorrect",
+                        number: _incorrect,
+                      ),
+                      NoOfQuestionTile(
+                        text: "NotAttempted",
+                        number: _notAttempted,
+                      ),
+                    ],
                   ),
                 )
               : Container();
@@ -220,6 +272,7 @@ class _QuizPlayTileState extends State<QuizPlayTile> {
           ),
           GestureDetector(
             onTap: () {
+              
               if (!widget.questionModel.answered) {
                 ///correct
                 if (widget.questionModel.option1 ==

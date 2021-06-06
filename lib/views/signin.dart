@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:quiz_app/helper/constants.dart';
 import 'package:quiz_app/helper/functions.dart';
+import 'package:quiz_app/models/sheet_form.dart';
 import 'package:quiz_app/services/auth.dart';
+import 'package:quiz_app/services/database.dart';
+import 'package:quiz_app/services/sheet_controller.dart';
 import 'package:quiz_app/views/home.dart';
 import 'package:quiz_app/views/signup.dart';
 import 'package:quiz_app/widgets/widgets.dart';
@@ -15,28 +19,36 @@ class SignIn extends StatefulWidget {
 
 class _SignInState extends State<SignIn> {
   final _formKey = GlobalKey<FormState>();
-
   
-  String email, password;
+  
+   String email = '', password = '', name = "";
   AuthService authService = new AuthService();
+  DatabaseService databaseService = new DatabaseService();
   bool isLoading = false;
-  SignIn() async {
+ getInfoAndSignUp() async {
     if (_formKey.currentState.validate()) {
       setState(() {
         isLoading = true;
       });
-      await authService.signInEmailAndPass(email, password).then((val) {
-        if (val != null) {
-          setState(() {
-            isLoading = false;
-          });
-          HelperFunctions.saveUserLoggedInDeatils(isLoggedin: true);
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => Home()));
-        }
+
+      await authService
+          .signUpwithEmailandPassword(email, password)
+          .then((value) {
+        Map<String, String> userInfo = {
+          "userName": name,
+          "email": email,
+        };
+
+        databaseService.addData(userInfo);
+
+        Constants.saveUserLoggedInSharedPreference(true);
+
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => Home()));
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +74,7 @@ class _SignInState extends State<SignIn> {
                     Text("Welcome",style: TextStyle(fontSize: 20,),),
                     Spacer(),
                     TextFormField(
+                      //controller: emailController,
                       validator: (val) {
                         return val.isEmpty ? "Enter Email Id" : null;
                       },
@@ -88,7 +101,7 @@ class _SignInState extends State<SignIn> {
                     ),
                     GestureDetector(
                         onTap: () {
-                          SignIn();
+                          getInfoAndSignUp();
                         },
                         child: blueButton(context: context, label: "Sign In")),
                     SizedBox(

@@ -81,13 +81,13 @@ class QuizTile extends StatelessWidget {
     @required this.quizId,
   });
 
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
-        context, MaterialPageRoute(builder: (context) =>QuizPlay(quizId)));
-
+            context, MaterialPageRoute(builder: (context) => QuizPlay(quizId)));
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 8),
@@ -126,7 +126,11 @@ class QuizTile extends StatelessWidget {
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w400),
-                  )
+                  ),
+                  SizedBox(
+                    height: 6,
+                  ),
+                  
                 ],
               ),
             )

@@ -41,7 +41,10 @@ class _ResultsState extends State<Results> {
                   Navigator.pushReplacement(
                       context, MaterialPageRoute(builder: (context) => Home()));
                 },
-                child: blueButton(context:context,label: "Go to home",buttonWidth: MediaQuery.of(context).size.width/2),
+                child: blueButton(
+                    context: context,
+                    label: "Go to home",
+                    buttonWidth: MediaQuery.of(context).size.width / 2),
               )
             ],
           ),
