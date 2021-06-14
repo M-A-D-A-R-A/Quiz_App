@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quiz_app/api/sheets/user_sheets_api.dart';
 import 'package:quiz_app/services/database.dart';
 import 'package:quiz_app/views/create_quiz.dart';
 import 'package:quiz_app/views/play_quiz.dart';
@@ -87,7 +88,11 @@ class QuizTile extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => QuizPlay(quizId)));
+            context, MaterialPageRoute(builder: (context) => QuizPlay(quizId:quizId,onSavedUser: (user) async {
+            final id = await UserSheetsApi.getRowCount() + 1;
+            final newUser = user.copy(id: id);
+            await UserSheetsApi.insert([newUser.toJson()]);
+          })));
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 8),

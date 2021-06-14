@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:quiz_app/api/sheets/user_sheets_api.dart';
 import 'package:quiz_app/helper/functions.dart';
 import 'package:quiz_app/views/home.dart';
 import 'package:quiz_app/views/signin.dart';
 
-void main() {
+Future main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await UserSheetsApi.init();
   runApp(MyApp());
 }
 
@@ -35,7 +38,6 @@ class _MyAppState extends State<MyApp> {
       title: 'Quiz App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        
         primarySwatch: Colors.blue,
       ),
       home: (_isLoggedin ?? false) ? Home() : SignIn(),

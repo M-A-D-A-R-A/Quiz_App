@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:quiz_app/models/question_model.dart';
+import 'package:quiz_app/models/sheet.dart';
 import 'package:quiz_app/models/sheet_form.dart';
 import 'package:quiz_app/services/database.dart';
 import 'package:quiz_app/services/sheet_controller.dart';
@@ -9,25 +10,24 @@ import 'package:quiz_app/widgets/quiz_play_widgets.dart';
 import 'package:quiz_app/widgets/widgets.dart';
 
 class QuizPlay extends StatefulWidget {
+  final ValueChanged<Users> onSavedUser;
   final String quizId;
-  QuizPlay(
-    this.quizId,
-  );
+  QuizPlay({
+    this.onSavedUser,
+    @required this.quizId,
+  });
 
   @override
   _QuizPlayState createState() => _QuizPlayState();
 }
 
-TextEditingController nameController = TextEditingController();
-TextEditingController emailController = TextEditingController();
-TextEditingController totalMarks = TextEditingController();
 final _formKey = GlobalKey<FormState>();
-
 
 int _correct = 0;
 int _incorrect = 0;
 int _notAttempted = 0;
 var total = 0;
+
 // int prevNo = 0;
 
 /// Stream
@@ -47,39 +47,22 @@ Stream infoStream;
 class _QuizPlayState extends State<QuizPlay> {
   QuerySnapshot questionSnaphot;
   DatabaseService databaseService = new DatabaseService();
-
-  void _submitForm() {
-    if (_formKey.currentState.validate()) {
-      FeedbackForm feedbackForm = FeedbackForm(
-        nameController.text,
-        emailController.text,
-        totalMarks.text,
-      );
-
-      FormController formController = FormController((String response) {
-        print("Response: $response");
-        if (response == FormController.STATUS_SUCCESS) {
-          print("Feedback Submitted");
-          //
-          // _showSnackbar("Feedback Submitted");
-        } else {
-          print("Error Occurred!");
-          // _showSnackbar("Error Occurred!");
-        }
-      });
-
-      // _showSnackbar("Submitting Feedback");
-
-      // Submit 'feedbackForm' and save it in Google Sheet
-
-      formController.submitForm(feedbackForm);
-    }
-  }
-
+  TextEditingController nameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  int totalMarks;
+  final formKey = GlobalKey<FormState>();
   bool isLoading = true;
+
+  void initUser() {
+    nameController = TextEditingController();
+    emailController = TextEditingController();
+    this.totalMarks = total;
+  }
 
   @override
   void initState() {
+    super.initState();
+    initUser();
     databaseService.getQuiz(widget.quizId).then((value) {
       questionSnaphot = value;
       _notAttempted = questionSnaphot.documents.length;
@@ -87,8 +70,10 @@ class _QuizPlayState extends State<QuizPlay> {
       _incorrect = 0;
       isLoading = false;
       total = questionSnaphot.documents.length;
-      setState(() {});
-     // print("init don $total ${widget.quizId} ");
+      setState(() {
+        totalMarks = _correct;
+      });
+      // print("init don $total ${widget.quizId} ");
     });
 
     if (infoStream == null) {
@@ -100,6 +85,52 @@ class _QuizPlayState extends State<QuizPlay> {
 
     super.initState();
   }
+
+  Widget buildName() => TextFormField(
+        controller: nameController,
+        decoration: InputDecoration(
+          labelText: 'Name',
+          border: OutlineInputBorder(),
+        ),
+        validator: (value) =>
+            value != null && value.isEmpty ? 'Enter Name' : null,
+      );
+
+  Widget buildEmail() => TextFormField(
+        controller: emailController,
+        decoration: InputDecoration(
+          labelText: 'Email',
+          border: OutlineInputBorder(),
+        ),
+        validator: (value) =>
+            value != null && value.isEmpty ? 'Enter Email' : null,
+      );
+
+  Widget buildSubmit() => Form(
+        key: formKey,
+        child: ButtonWidget(
+            text: 'Save',
+            onClicked: () {
+              final form = formKey.currentState;
+              final isValid = form.validate();
+              if (isValid) {
+                final user = Users(
+                    name: nameController.text,
+                    email: emailController.text,
+                    totalMarks: _correct);
+
+                widget.onSavedUser(user);
+              }
+
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Results(
+                          correct: _correct,
+                          incorect: _incorrect,
+                          total: total)));
+            }),
+      );
 
   QuestionModel getQuestionModelFromDatasnapshot(
       DocumentSnapshot questionSnapshot) {
@@ -158,6 +189,10 @@ class _QuizPlayState extends State<QuizPlay> {
                     SizedBox(
                       height: 10,
                     ),
+                    buildName(),
+                    const SizedBox(height: 16),
+                    buildEmail(),
+                    const SizedBox(height: 16),
                     questionSnaphot.documents == null
                         ? Container(
                             child: Center(
@@ -174,21 +209,13 @@ class _QuizPlayState extends State<QuizPlay> {
                                     questionSnaphot.documents[index]),
                                 index: index,
                               );
-                            })
+                            }),
+                    const SizedBox(height: 16),
+                    buildSubmit()
                   ],
                 ),
               ),
             ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.check),
-        onPressed: () {
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => Results(
-                      correct: _correct, incorect: _incorrect, total: total)));
-        },
-      ),
     );
   }
 }
@@ -272,7 +299,6 @@ class _QuizPlayTileState extends State<QuizPlayTile> {
           ),
           GestureDetector(
             onTap: () {
-              
               if (!widget.questionModel.answered) {
                 ///correct
                 if (widget.questionModel.option1 ==
